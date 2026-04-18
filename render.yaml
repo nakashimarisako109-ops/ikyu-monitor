@@ -1,0 +1,45 @@
+# Render.com cronジョブ設定
+# ドキュメント: https://render.com/docs/cronjobs
+
+services:
+  - type: cron
+    name: ikyu-timesale-monitor
+    runtime: python
+    schedule: "0 */6 * * *"   # 6時間ごと（UTC）。日本時間は+9h
+    buildCommand: pip install -r requirements.txt
+    startCommand: python monitor.py
+    envVars:
+      - key: GMAIL_ADDRESS
+        sync: false          # Render ダッシュボードで手動設定
+      - key: GMAIL_APP_PASSWORD
+        sync: false
+      - key: NOTIFY_EMAIL
+        sync: false
+
+# -------------------------------------------------------
+# Render デプロイ手順
+# -------------------------------------------------------
+# 1. GitHubリポジトリに monitor.py / requirements.txt / render.yaml を push
+# 2. Render ダッシュボード → "New" → "Cron Job"
+# 3. リポジトリを接続し、上記設定が読み込まれることを確認
+# 4. Environment Variables に以下を登録:
+#      GMAIL_ADDRESS      : your@gmail.com
+#      GMAIL_APP_PASSWORD : xxxx xxxx xxxx xxxx  (Googleアプリパスワード16桁)
+#      NOTIFY_EMAIL       : your@gmail.com
+# 5. "Create Cron Job" → 完了
+#
+# -------------------------------------------------------
+# Gmailアプリパスワード取得手順
+# -------------------------------------------------------
+# 1. Googleアカウント → セキュリティ → 2段階認証をON
+# 2. セキュリティ → 「アプリパスワード」→ アプリ名を入力して生成
+# 3. 生成された16文字をGMAIL_APP_PASSWORDに設定
+#
+# -------------------------------------------------------
+# ローカルテスト方法
+# -------------------------------------------------------
+# export GMAIL_ADDRESS="your@gmail.com"
+# export GMAIL_APP_PASSWORD="xxxx xxxx xxxx xxxx"
+# export NOTIFY_EMAIL="your@gmail.com"
+# pip install -r requirements.txt
+# python monitor.py
