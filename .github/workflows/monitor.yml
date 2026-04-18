@@ -1,0 +1,43 @@
+name: Ikyu Timesale Monitor
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"   # 6時間ごと（UTC）
+  workflow_dispatch:          # 手動実行ボタンも有効化
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Restore last_notified.txt
+        uses: actions/cache@v4
+        with:
+          path: last_notified.txt
+          key: last-notified-${{ runner.os }}
+          restore-keys: last-notified-
+
+      - name: Run monitor
+        env:
+          GMAIL_ADDRESS: ${{ secrets.GMAIL_ADDRESS }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          NOTIFY_EMAIL: ${{ secrets.NOTIFY_EMAIL }}
+        run: python monitor.py
+
+      - name: Save last_notified.txt
+        uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: last_notified.txt
+          key: last-notified-${{ runner.os }}-${{ github.run_id }}
