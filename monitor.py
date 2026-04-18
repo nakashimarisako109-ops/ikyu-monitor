@@ -28,12 +28,30 @@ HEADERS = {
         "AppleWebKit/537.36 (KHTML, like Gecko) "
         "Chrome/124.0.0.0 Safari/537.36"
     ),
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
     "Accept-Language": "ja,en-US;q=0.9,en;q=0.8",
+    "Accept-Encoding": "gzip, deflate, br",
+    "Connection": "keep-alive",
+    "Upgrade-Insecure-Requests": "1",
+    "Sec-Fetch-Dest": "document",
+    "Sec-Fetch-Mode": "navigate",
+    "Sec-Fetch-Site": "none",
+    "Cache-Control": "max-age=0",
 }
 
 
 def fetch_page(url: str) -> str:
-    resp = requests.get(url, headers=HEADERS, timeout=30)
+    session = requests.Session()
+    session.headers.update(HEADERS)
+    # トップページを先に訪問してCookieを取得
+    try:
+        session.get("https://www.ikyu.com/", timeout=15)
+    except Exception:
+        pass
+    resp = session.get(url, timeout=30)
+    if resp.status_code == 403:
+        print(f"403 Forbidden: サイトがアクセスをブロックしました。スキップします。")
+        sys.exit(0)
     resp.raise_for_status()
     resp.encoding = resp.apparent_encoding
     return resp.text
